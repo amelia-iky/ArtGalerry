@@ -23,7 +23,9 @@ const HalamanKarya = () => {
   const fetchKaryaDariBackend = async () => {
     try {
       const data = await getKaryaList(); // Panggil API backend
-      const karyaUserSendiri = data.filter((karya) => karya.user_id === currentUser?.id);
+      const karyaUserSendiri = data.filter(
+        (karya) => karya.user_id === currentUser?.id
+      );
       setArtworks(karyaUserSendiri);
     } catch (err) {
       message.error("Gagal memuat data karya dari server.");
@@ -97,10 +99,42 @@ const HalamanKarya = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         {artworks.map((art) => (
           <div key={art.id} className="border rounded shadow overflow-hidden">
-            <img src={`http://127.0.0.1:5000/${art.link_foto}`} alt={art.judul_karya} className="w-full h-48 object-cover" />
+            <img
+              src={`http://127.0.0.1:5000/${art.link_foto}`}
+              alt={art.judul_karya}
+              className="w-full h-48 object-cover"
+            />
             <div className="p-4">
               <h3 className="text-lg font-semibold">{art.judul_karya}</h3>
               <p className="text-sm text-gray-500">{art.deskripsi}</p>
+            </div>
+            <div className="mt-3 flex justify-between items-center p-5">
+              {/* ❤️ Jumlah Like (Hanya Tampilan) */}
+              <div className="flex items-center gap-1 text-gray-700 select-none">
+                <span>{art.likes || 0}</span>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-5 h-5 fill-red-500"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 
+                      2 8.5 2 6 4 4 6.5 4c1.74 0 3.41 1.01 
+                      4.13 2.44h1.74C14.09 5.01 
+                      15.76 4 17.5 4 20 4 22 6 
+                      22 8.5c0 3.78-3.4 6.86-8.55 
+                      11.54L12 21.35z"
+                  />
+                </svg>
+              </div>
+              <div className="flex gap-3">
+                <button onClick={() => handleEdit(art)} title="Edit">
+                  <Edit3 className="w-5 h-5 text-blue-600 hover:text-blue-800" />
+                </button>
+                <button onClick={() => handleDelete(art.id)} title="Hapus">
+                  <Trash2 className="w-5 h-5 text-red-600 hover:text-red-800" />
+                </button>
+              </div>
             </div>
           </div>
         ))}
@@ -118,17 +152,43 @@ const HalamanKarya = () => {
             >
               &times;
             </button>
-            <h3 className="text-xl font-semibold mb-4">{editId ? "Edit Karya" : "Tambah Karya"}</h3>
+            <h3 className="text-xl font-semibold mb-4">
+              {editId ? "Edit Karya" : "Tambah Karya"}
+            </h3>
             <form onSubmit={handleSubmit}>
               <label className="block text-sm font-medium mb-1">Foto *</label>
-              <input type="file" accept="image/*" onChange={handleImageChange} className="mb-3 block w-full" required={!editId} />
-              {imagePreview && <img src={imagePreview} alt="Preview" className="h-40 mb-3 object-cover rounded" />}
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="mb-3 block w-full"
+                required={!editId}
+              />
+              {imagePreview && (
+                <img
+                  src={imagePreview}
+                  alt="Preview"
+                  className="h-40 mb-3 object-cover rounded"
+                />
+              )}
 
               <label className="block text-sm font-medium mb-1">Judul *</label>
-              <input type="text" className="w-full border px-3 py-2 rounded mb-3" value={judul} onChange={(e) => setJudul(e.target.value)} required />
+              <input
+                type="text"
+                className="w-full border px-3 py-2 rounded mb-3"
+                value={judul}
+                onChange={(e) => setJudul(e.target.value)}
+                required
+              />
 
-              <label className="block text-sm font-medium mb-1">Deskripsi</label>
-              <textarea className="w-full border px-3 py-2 rounded mb-3" value={deskripsi} onChange={(e) => setDeskripsi(e.target.value)} />
+              <label className="block text-sm font-medium mb-1">
+                Deskripsi
+              </label>
+              <textarea
+                className="w-full border px-3 py-2 rounded mb-3"
+                value={deskripsi}
+                onChange={(e) => setDeskripsi(e.target.value)}
+              />
 
               <div className="flex justify-end gap-2">
                 <button
@@ -141,7 +201,10 @@ const HalamanKarya = () => {
                 >
                   Batal
                 </button>
-                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded">
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-blue-600 text-white rounded"
+                >
                   Simpan
                 </button>
               </div>
