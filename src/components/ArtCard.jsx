@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { getKaryaList, likeKarya, unlikeKarya } from "../util/api";
 
 const ArtCard = () => {
   const [artworks, setArtworks] = useState([]);
@@ -8,31 +9,40 @@ const ArtCard = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const storedArtworks = JSON.parse(localStorage.getItem("daftarKarya")) || [];
-    const storedLikes = JSON.parse(localStorage.getItem("likedItems")) || [];
-    setArtworks(storedArtworks);
-    setLikedItems(storedLikes);
+    const fetchData = async () => {
+      try {
+        const data = await getKaryaList();
+        setArtworks(data);
+        const storedLikes = JSON.parse(localStorage.getItem("likedItems")) || [];
+        setLikedItems(storedLikes);
+      } catch (err) {
+        console.error("Gagal memuat karya dari server:", err);
+      }
+    };
+
+    fetchData();
   }, []);
 
-  const handleLikeToggle = (id) => {
-    let updatedArtworks = [...artworks];
-    let updatedLikes = [...likedItems];
+  const handleLikeToggle = async (id) => {
+    const isLiked = likedItems.includes(id);
 
-    if (likedItems.includes(id)) {
-      updatedArtworks = updatedArtworks.map((art) => (art.id === id ? { ...art, likes: (art.likes || 1) - 1 } : art));
-      updatedLikes = updatedLikes.filter((likedId) => likedId !== id);
-    } else {
-      updatedArtworks = updatedArtworks.map((art) => (art.id === id ? { ...art, likes: (art.likes || 0) + 1 } : art));
-      updatedLikes.push(id);
+    try {
+      const newLikeCount = isLiked ? await unlikeKarya(id) : await likeKarya(id);
+
+      const updatedArtworks = artworks.map((art) => (art.id === id ? { ...art, like_count: newLikeCount } : art));
+
+      setArtworks(updatedArtworks);
+
+      const updatedLikes = isLiked ? likedItems.filter((item) => item !== id) : [...likedItems, id];
+
+      setLikedItems(updatedLikes);
+      localStorage.setItem("likedItems", JSON.stringify(updatedLikes));
+    } catch (err) {
+      console.error("Gagal toggle like:", err);
     }
-
-    setArtworks(updatedArtworks);
-    setLikedItems(updatedLikes);
-    localStorage.setItem("daftarKarya", JSON.stringify(updatedArtworks));
-    localStorage.setItem("likedItems", JSON.stringify(updatedLikes));
   };
 
-  const limitedArtworks = artworks.slice(0, 6); // Batasi 6 item
+  const limitedArtworks = artworks.slice(0, 6);
 
   return (
     <section className="py-1 px-6">
@@ -59,29 +69,27 @@ const ArtCard = () => {
             const isLiked = likedItems.includes(art.id);
             return (
               <div key={art.id} className="relative group min-w-[260px] overflow-hidden rounded-3xl bg-white/10 backdrop-blur-lg border border-white/30 shadow-xl hover:scale-105 transform transition-all duration-300 flex-shrink-0">
-                <img src={art.photo} alt={art.title} className="w-full h-64 object-cover group-hover:brightness-75 transition" />
-
-                {/* Info saat hover */}
+                <img src={`http://127.0.0.1:5000/${art.link_foto}`} alt={art.judul_karya} className="w-full h-64 object-cover group-hover:brightness-75 transition" />
                 <div className="absolute inset-0 flex flex-col justify-end p-4 opacity-0 group-hover:opacity-100 transition duration-300 bg-gradient-to-t from-black/70 via-black/20 to-transparent">
-                  <h3 className="text-white text-lg font-semibold">{art.title}</h3>
-                  <p className="text-gray-200 text-sm truncate">{art.description}</p>
-                  <p className="text-gray-300 text-xs mt-1">Oleh: {art.artist}</p>
+                  <h3 className="text-white text-lg font-semibold">{art.judul_karya}</h3>
+                  <p className="text-gray-200 text-sm truncate">{art.deskripsi}</p>
+                  <div className="px-4 py-2 text-white text-sm font-medium">Dibuat oleh: {art.artist}</div>
                 </div>
 
-                {/* Tombol like mengambang */}
+                {/* Tombol like */}
                 <div
                   onClick={() => handleLikeToggle(art.id)}
                   className={`absolute top-3 right-3 w-9 h-9 rounded-full bg-white/80 flex items-center justify-center shadow-md cursor-pointer hover:scale-110 transition ${isLiked ? "text-red-500" : "text-gray-600"}`}
                 >
-                  <span className="text-sm">{art.likes || 0}</span>
+                  <span className="text-sm">{art.like_count || 0}</span>
                   <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 ml-1 fill-current" viewBox="0 0 24 24">
                     <path
                       d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 
-        2 8.5 2 6 4 4 6.5 4c1.74 0 3.41 1.01 
-        4.13 2.44h1.74C14.09 5.01 
-        15.76 4 17.5 4 20 4 22 6 
-        22 8.5c0 3.78-3.4 6.86-8.55 
-        11.54L12 21.35z"
+                      2 8.5 2 6 4 4 6.5 4c1.74 0 3.41 1.01 
+                      4.13 2.44h1.74C14.09 5.01 
+                      15.76 4 17.5 4 20 4 22 6 
+                      22 8.5c0 3.78-3.4 6.86-8.55 
+                      11.54L12 21.35z"
                     />
                   </svg>
                 </div>

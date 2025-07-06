@@ -34,10 +34,10 @@ const Home = () => {
   };
 
   return (
-    <main className="flex-grow text-white">
+    <main className="lex-grow text-gray-900 bg-gradient-to-br from-white via-pink-100 to-blue-200">
       <HeroSection />
       {/* Statistik */}
-      <section className="py-16 bg-white">
+      <section className="py-16">
         <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6 px-4">
           {[
             { count: "5.2K", label: "Digital Artworks" },
