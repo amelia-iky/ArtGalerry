@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
 
 export const useFetchKaryaVideo = () => {
   const [data, setData] = useState(null);
@@ -9,11 +8,14 @@ export const useFetchKaryaVideo = () => {
   useEffect(() => {
     const fetchKaryaVideos = async () => {
       try {
-        const response = await axios.get(
-          "http://127.0.0.1:5000/api/ruang_video"
-        );
+        const response = await fetch("http://127.0.0.1:5000/api/ruang_video");
 
-        setData(response.data);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        setData(result);
       } catch (err) {
         setError(err);
       } finally {

@@ -1,40 +1,66 @@
 import { useEffect, useState } from "react";
-import { Button, Card, Modal, Form, Input, message, notification } from "antd";
+import { Button, Card, Modal, Form, Input, notification } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import { Edit3, Trash2 } from "lucide-react";
 const { TextArea } = Input;
-import { usePostKaryaVideo } from "../util/usePostKaryaVideo";
-import { useFetchKaryaVideo } from "../util/useFetchKaryaVideo";
+
+import { usePostKaryaVideo } from "../util/usePostKaryaVideo.jsx";
+import { useFetchKaryaVideo } from "../util/useFetchKaryaVideo.jsx";
 
 const DokumentasiVideo = () => {
   const [showForm, setShowForm] = useState(false);
   const [videoList, setVideoList] = useState([]);
-  const [likedVideos, setLikedVideos] = useState({});
   const [editingVideo, setEditingVideo] = useState(null);
   const [form] = Form.useForm();
 
   const { postKaryaVideo } = usePostKaryaVideo();
-  const { data, loading, error } = useFetchKaryaVideo();
+  const { data } = useFetchKaryaVideo();
 
   useEffect(() => {
     if (data) {
-      setVideoList(data); // isi videoList dari data backend
+      setVideoList(data);
     }
   }, [data]);
 
   const handleFinish = async (values) => {
+    const token = localStorage.getItem("token");
+
     if (editingVideo) {
-      const updatedList = videoList.map((vid) =>
-        vid.id === editingVideo.id ? { ...editingVideo, ...values } : vid
+      // PUT request untuk edit video
+      const res = await fetch(
+        `http://localhost:5000/api/ruang_video/${editingVideo.id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(values),
+        }
       );
-      setVideoList(updatedList); // update local list
-      notification.success({
-        message: "Video Diperbarui",
-        description: `Video "${values.judul}" berhasil diperbarui.`,
-        placement: "topRight",
-      });
+
+      const result = await res.json();
+
+      if (res.ok) {
+        const updatedList = videoList.map((vid) =>
+          vid.id === editingVideo.id ? { ...vid, ...values } : vid
+        );
+        setVideoList(updatedList);
+
+        notification.success({
+          message: "Video Diperbarui",
+          description: result.message,
+        });
+
+        // Trigger update untuk RuangVideo
+        window.dispatchEvent(new Event("video-updated"));
+      } else {
+        notification.error({
+          message: "Gagal Memperbarui",
+          description: result.message || "Terjadi kesalahan.",
+        });
+      }
     } else {
-      // Kirim ke backend
       await postKaryaVideo(
         values.judul,
         values.link_youtube,
@@ -49,17 +75,42 @@ const DokumentasiVideo = () => {
     setEditingVideo(null);
   };
 
-  const handleDelete = (id) => {
-    const filtered = videoList.filter((v) => v.id !== id);
-    setVideoList(filtered); // hapus dari frontend
-    const newLikes = { ...likedVideos };
-    delete newLikes[id];
-    setLikedVideos(newLikes);
-    notification.success({
-      message: "Video Dihapus",
-      description: "Video berhasil dihapus.",
-      placement: "topRight",
-    });
+  const handleDelete = async (id) => {
+    const token = localStorage.getItem("token");
+
+    try {
+      const res = await fetch(`http://localhost:5000/api/ruang_video/${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const result = await res.json();
+
+      if (res.ok) {
+        const filtered = videoList.filter((v) => v.id !== id);
+        setVideoList(filtered);
+
+        notification.success({
+          message: "Video Dihapus",
+          description: result.message,
+        });
+
+        // Trigger update untuk RuangVideo
+        window.dispatchEvent(new Event("video-updated"));
+      } else {
+        notification.error({
+          message: "Gagal Menghapus",
+          description: result.message || "Terjadi kesalahan saat menghapus.",
+        });
+      }
+    } catch (err) {
+      notification.error({
+        message: "Error",
+        description: "Terjadi error saat menghapus video.",
+      });
+    }
   };
 
   const handleEdit = (video) => {
@@ -124,25 +175,6 @@ const DokumentasiVideo = () => {
               <h3 className="font-bold">{video.judul}</h3>
               <p className="text-sm text-gray-600">Oleh: {video.dibuat_oleh}</p>
               <p className="text-sm text-gray-500">{video.deskripsi}</p>
-
-              {/* ❤️ Tampilan Like di kanan */}
-              <div className="flex justify-end items-center mt-3 text-base text-gray-800 select-none">
-                <span className="mr-1">{video.likes || 0}</span>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="w-6 h-6 fill-red-500"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 
-                      2 8.5 2 6 4 4 6.5 4c1.74 0 3.41 1.01 
-                      4.13 2.44h1.74C14.09 5.01 
-                      15.76 4 17.5 4 20 4 22 6 
-                      22 8.5c0 3.78-3.4 6.86-8.55 
-                      11.54L12 21.35z"
-                  />
-                </svg>
-              </div>
             </Card>
           ))}
         </div>
@@ -160,6 +192,7 @@ const DokumentasiVideo = () => {
           editingVideo ? "Edit Video Dokumentasi" : "Tambah Video Dokumentasi"
         }
         okText="Simpan Video"
+        getContainer={false}
       >
         <Form form={form} layout="vertical" onFinish={handleFinish}>
           <Form.Item
