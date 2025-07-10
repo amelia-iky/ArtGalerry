@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Button, Card, Input, Form, Upload, Avatar, message, Tabs, notification, Modal } from "antd";
+import axios from "axios";
+import { Button, Card, Input, Form, Avatar, message, Tabs, notification, Modal } from "antd";
 import { EditOutlined, LockOutlined, MailOutlined, UserOutlined, EnvironmentOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import HalamanKarya from "./karya_saya";
@@ -10,34 +11,40 @@ const ProfilePage = () => {
   const [form] = Form.useForm();
   const navigate = useNavigate();
   const [avatarUrl, setAvatarUrl] = useState(null);
+  const [userData, setUserData] = useState(null);
+  const [userId, setUserId] = useState(null);
+  const [selectedAvatarFile, setSelectedAvatarFile] = useState(null);
 
-  const [userData, setUserData] = useState(() => {
-    const currentUser = JSON.parse(localStorage.getItem("currentUser"));
-    return (
-      currentUser || {
-        name: "Ahmad Fauzi",
-        username: "ahmadfauzi",
-        email: "ahmad.fauzi@email.com",
-        bio: "",
-        password: "********",
-        location: "",
-        avatar: "",
-      }
-    );
-  });
   useEffect(() => {
-    const justLoggedIn = localStorage.getItem("justLoggedIn");
-    const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+    const fetchUserProfile = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return;
 
-    if (justLoggedIn && currentUser) {
-      notification.success({
-        message: "Login Berhasil",
-        description: `Selamat datang, ${currentUser.name}!`,
-        placement: "topRight",
-        duration: 2,
-      });
-      localStorage.removeItem("justLoggedIn");
-    }
+        const res = await axios.get("http://127.0.0.1:5000/api/users/me", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const user = res.data;
+        console.log("📦 Data user dari /me:", user);
+
+        setUserData({
+          name: user.nama_lengkap,
+          username: user.username,
+          email: user.email || "",
+          bio: user.bio || "",
+          password: "********",
+          location: user.lokasi || "",
+          avatar: user.foto_profil || null,
+        });
+        setAvatarUrl(user.foto_profil);
+        setUserId(user.id);
+      } catch (err) {
+        console.error("Gagal mengambil profil:", err);
+      }
+    };
+
+    fetchUserProfile();
   }, []);
 
   const handleAvatarChange = (e) => {
@@ -45,34 +52,59 @@ const ProfilePage = () => {
     if (file) {
       const reader = new FileReader();
       reader.onload = () => {
-        setAvatarUrl(reader.result);
+        setAvatarUrl(reader.result); // untuk preview
+        setSelectedAvatarFile(file); // untuk upload
       };
       reader.readAsDataURL(file);
       message.success(`${file.name} berhasil diunggah`);
     }
   };
 
-  const onFinish = (values) => {
-    const updatedData = {
-      ...userData,
-      ...values,
-      avatar: avatarUrl || userData.avatar,
-    };
+  const onFinish = async (values) => {
+    try {
+      const formData = new FormData();
+      formData.append("nama_lengkap", values.name);
+      formData.append("username", values.username);
+      formData.append("bio", values.bio || "");
+      formData.append("lokasi", values.location || "");
+      if (selectedAvatarFile) {
+        formData.append("foto_profil", selectedAvatarFile);
+      }
 
-    setUserData(updatedData);
-    localStorage.setItem("currentUser", JSON.stringify(updatedData));
+      const token = localStorage.getItem("token");
 
-    // 🔧 Update di daftar user
-    const users = JSON.parse(localStorage.getItem("users")) || [];
-    const updatedUsers = users.map((u) => (u.username === updatedData.username ? updatedData : u));
-    localStorage.setItem("users", JSON.stringify(updatedUsers));
+      // Kirim update ke backend
+      await axios.put(`http://127.0.0.1:5000/api/users/${userId}`, formData, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-    setIsEditing(false);
-    notification.success({
-      message: "Profil Diperbarui",
-      description: "Perubahan profil berhasil disimpan.",
-      placement: "topRight",
-    });
+      notification.success({ message: "Profil berhasil diperbarui" });
+
+      // ✅ Reset file upload
+      setSelectedAvatarFile(null);
+
+      // ✅ Ambil ulang data user yang terbaru dari backend
+      const res = await axios.get(`http://127.0.0.1:5000/api/users/username/${values.username}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const updatedUser = res.data;
+      setUserData({
+        name: updatedUser.nama_lengkap,
+        username: updatedUser.username,
+        email: updatedUser.email || "",
+        bio: updatedUser.bio || "",
+        password: "********",
+        location: updatedUser.lokasi || "",
+        avatar: updatedUser.foto_profil || null,
+      });
+      setAvatarUrl(updatedUser.foto_profil);
+
+      setIsEditing(false);
+    } catch (err) {
+      message.error("Gagal memperbarui profil");
+      console.error(err);
+    }
   };
 
   const handleLogout = () => {
@@ -94,11 +126,12 @@ const ProfilePage = () => {
     });
   };
 
+  if (!userData) return <div className="text-center p-10">Memuat profil...</div>;
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-3xl mx-auto">
         <Card className="shadow-sm">
-          {/* Bagian Avatar */}
           <div className="flex flex-col items-center justify-center text-center py-6 border-b border-gray-200 relative">
             <div className="relative group">
               <Avatar src={avatarUrl || userData.avatar} size={96} icon={<UserOutlined />} className="bg-blue-500 text-white text-3xl object-cover" style={{ borderRadius: "50%" }}>
@@ -120,7 +153,6 @@ const ProfilePage = () => {
             {userData.bio && <p className="text-gray-600 mt-2 max-w-md">{userData.bio}</p>}
           </div>
 
-          {/* Tab */}
           <Tabs
             defaultActiveKey="1"
             items={[
@@ -154,11 +186,7 @@ const ProfilePage = () => {
                       </Form.Item>
 
                       <Form.Item name="password" label="Password">
-                        {isEditing ? (
-                          <Input.Password prefix={<LockOutlined />} />
-                        ) : (
-                          <div>{"*".repeat(userData.password?.length || 8)}</div> // default 8 kalau undefined
-                        )}
+                        {isEditing ? <Input.Password prefix={<LockOutlined />} /> : <div>{"*".repeat(userData.password?.length || 8)}</div>}
                       </Form.Item>
 
                       <Form.Item name="name" label="Nama Lengkap">

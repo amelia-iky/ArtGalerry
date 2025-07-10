@@ -10,7 +10,7 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Bagian Deskripsi */}
           <div>
-            <h2 className="text-2xl font-bold text-white mb-4">ArtGallery</h2>
+            <h2 className="text-2xl font-bold text-white mb-4">ArtSpace</h2>
             <p className="text-white">Platform berbagai karya seni untuk menghubungkan seniman dengan penggemar seni di seluruh Indonesia.</p>
           </div>
 
@@ -27,11 +27,11 @@ const Footer = () => {
               <li onClick={() => navigate("/ruang-video")} className="text-white hover:text-blue-300 cursor-pointer transition">
                 Ruang Video
               </li>
-              <li onClick={() => navigate("/profile")} className="text-white hover:text-blue-300 cursor-pointer transition">
-                Profil
-              </li>
               <li onClick={() => navigate("/seniman")} className="text-white hover:text-blue-300 cursor-pointer transition">
                 Seniman
+              </li>
+              <li onClick={() => navigate("/profile")} className="text-white hover:text-blue-300 cursor-pointer transition">
+                Profil
               </li>
             </ul>
           </div>
@@ -40,9 +40,9 @@ const Footer = () => {
           <div>
             <h3 className="text-lg font-semibold text-white mb-4">Kontak</h3>
             <ul className="space-y-2 text-white">
-              <li>Email: info@artgallery.com</li>
-              <li>Telepon: +82 123 4567 890</li>
-              <li>Alamat: Jl. Seni Raya No. 123, Jakarta</li>
+              <li>Email: artSpace123@Gmail.com</li>
+              <li>Telepon: +62 123-4455-6565</li>
+              <li>Alamat: Jl. Udayana, Bali</li>
             </ul>
           </div>
         </div>

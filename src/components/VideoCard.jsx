@@ -1,41 +1,29 @@
 import { useEffect, useState } from "react";
-import { HeartFilled, HeartOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 
 const VideoCard = () => {
   const [videos, setVideos] = useState([]);
-  const [likedVideos, setLikedVideos] = useState({});
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const savedVideos = JSON.parse(localStorage.getItem("videoList")) || [];
-    const videosWithLikes = savedVideos.map((v) => ({
-      ...v,
-      likes: v.likes || 0,
-    }));
-    setVideos(videosWithLikes);
-    const likedData = JSON.parse(localStorage.getItem("likedVideos")) || {};
-    setLikedVideos(likedData);
-  }, []);
-
-  const toggleLike = (videoId) => {
-    const updatedLikes = { ...likedVideos };
-    let updatedVideos = [...videos];
-
-    if (updatedLikes[videoId]) {
-      delete updatedLikes[videoId];
-      updatedVideos = updatedVideos.map((v) => (v.id === videoId ? { ...v, likes: Math.max((v.likes || 1) - 1, 0) } : v));
-    } else {
-      updatedLikes[videoId] = true;
-      updatedVideos = updatedVideos.map((v) => (v.id === videoId ? { ...v, likes: (v.likes || 0) + 1 } : v));
+  const fetchVideos = async () => {
+    try {
+      const res = await fetch("http://localhost:5000/api/ruang_video");
+      const data = await res.json();
+      setVideos(data);
+    } catch (err) {
+      console.error("Gagal memuat video:", err);
     }
-
-    setLikedVideos(updatedLikes);
-    setVideos(updatedVideos);
-    localStorage.setItem("likedVideos", JSON.stringify(updatedLikes));
-    localStorage.setItem("videoList", JSON.stringify(updatedVideos));
   };
+
+  useEffect(() => {
+    fetchVideos();
+
+    const handleUpdate = () => fetchVideos();
+    window.addEventListener("video-updated", handleUpdate);
+
+    return () => window.removeEventListener("video-updated", handleUpdate);
+  }, []);
 
   const limitedVideos = videos.slice(0, 6);
 
@@ -62,8 +50,8 @@ const VideoCard = () => {
         {limitedVideos.map((video) => (
           <div key={video.id} className="relative group overflow-hidden rounded-2xl shadow-xl bg-white/80 backdrop-blur-md transition-transform hover:scale-[1.02]">
             <div className="relative">
-              <a href={video.youtubeLink} target="_blank" rel="noopener noreferrer">
-                <img src={video.thumbnail} alt={video.title} className="h-48 w-full object-cover transition-transform duration-300 group-hover:scale-105" />
+              <a href={video.link_youtube} target="_blank" rel="noopener noreferrer">
+                <img src={video.link_thumbnail} alt={video.judul} className="h-48 w-full object-cover transition-transform duration-300 group-hover:scale-105" />
                 <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition pointer-events-none flex items-center justify-center">
                   <svg className="w-12 h-12 text-white" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M8 5v14l11-7z" />
@@ -73,15 +61,11 @@ const VideoCard = () => {
             </div>
 
             <div className="p-4">
-              <h3 className="text-gray-900 font-semibold text-lg truncate">{video.title}</h3>
-              <p className="text-sm text-gray-600 line-clamp-2">{video.description || "-"}</p>
+              <h3 className="text-gray-900 font-semibold text-lg truncate">{video.judul}</h3>
+              <p className="text-sm text-gray-600 line-clamp-2">{video.deskripsi || "-"}</p>
 
               <div className="flex justify-between items-center text-sm text-gray-500 mt-3 pt-2 border-t">
-                <span>Oleh: {video.author}</span>
-                <button onClick={() => toggleLike(video.id)} className="cursor-pointer flex items-center gap-1 z-10 relative">
-                  {likedVideos[video.id] ? <HeartFilled className="text-red-500" /> : <HeartOutlined />}
-                  <span>{video.likes || 0}</span>
-                </button>
+                <span>Oleh: {video.dibuat_oleh}</span>
               </div>
             </div>
           </div>
