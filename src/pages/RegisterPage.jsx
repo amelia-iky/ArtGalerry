@@ -22,7 +22,7 @@ const RegisterPage = () => {
 
       // ✅ Gunakan res.status === 201 (bukan success atau string)
       if (res?.status === 201) {
-        message.success("✅ Registrasi berhasil! Silakan login.");
+        message.success("Registrasi berhasil! Silakan login.");
         navigate("/login");
       } else {
         const msg = res.data?.message || "Registrasi gagal.";

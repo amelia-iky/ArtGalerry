@@ -2,7 +2,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Card, Avatar } from "antd";
 import { UserOutlined } from "@ant-design/icons";
-
+import { getUserByUsername, getUserDetailById } from "../util/api";
 const DetailSeniman = () => {
   const { username } = useParams();
   const navigate = useNavigate();
@@ -13,35 +13,30 @@ const DetailSeniman = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // 🔹 Fetch user by username
-        const resUser = await fetch(`http://127.0.0.1:5000/api/users/username/${username}`);
-        if (!resUser.ok) throw new Error(`User not found (${resUser.status})`);
-        const user = await resUser.json();
+        const user = await getUserByUsername(username);
         setSeniman(user);
 
-        // ✅ Fetch detail karya + video berdasarkan user.id
-        const resDetail = await fetch(`http://127.0.0.1:5000/api/users/${user.id}/detail`);
-        if (resDetail.ok) {
-          const detail = await resDetail.json();
+        const detail = await getUserDetailById(user.id);
 
-          const karyaData = (detail.karya_seni || []).map((k) => ({
-            id: k.id,
-            title: k.judul_karya,
-            description: k.deskripsi,
-            photo: `http://127.0.0.1:5000/${k.link_foto}`, // tambahkan domain backend
-          }));
+        const karyaData = (detail.karya_seni || []).map((k) => ({
+          id: k.id,
+          title: k.judul_karya,
+          description: k.deskripsi,
+          photo: `http://127.0.0.1:5000/${k.link_foto}`,
+        }));
 
-          const videoData = (detail.ruang_video || []).map((v) => ({
-            id: v.id,
-            title: v.judul,
-            description: v.deskripsi,
-            youtubeLink: v.link_youtube,
-            thumbnail: v.link_thumbnail,
-          }));
+        const videoData = (detail.ruang_video || []).map((v) => ({
+          id: v.id,
+          title: v.judul,
+          description: v.deskripsi,
+          youtubeLink: v.link_youtube,
+          thumbnail: v.link_thumbnail?.startsWith("http") ? v.link_thumbnail : `http://127.0.0.1:5000/${v.link_thumbnail}`,
+        }));
 
-          setKarya(karyaData);
-          setVideo(videoData);
-        }
+        console.log("📺 Data video:", videoData);
+
+        setKarya(karyaData);
+        setVideo(videoData);
       } catch (error) {
         console.error("Error loading profile:", error);
         navigate("/seniman");

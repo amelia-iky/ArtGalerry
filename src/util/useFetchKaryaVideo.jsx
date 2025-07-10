@@ -7,8 +7,14 @@ export const useFetchKaryaVideo = () => {
 
   useEffect(() => {
     const fetchKaryaVideos = async () => {
+      const token = localStorage.getItem("token");
+
       try {
-        const response = await fetch("http://127.0.0.1:5000/api/ruang_video");
+        const response = await fetch("http://127.0.0.1:5000/api/ruang_video/me", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);

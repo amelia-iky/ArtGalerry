@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Button, Card, Modal, Form, Input, notification } from "antd";
+import { Button, Card, Modal, Form, Input, notification, Popconfirm } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import { Edit3, Trash2 } from "lucide-react";
 const { TextArea } = Input;
@@ -26,25 +26,19 @@ const DokumentasiVideo = () => {
     const token = localStorage.getItem("token");
 
     if (editingVideo) {
-      // PUT request untuk edit video
-      const res = await fetch(
-        `http://localhost:5000/api/ruang_video/${editingVideo.id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(values),
-        }
-      );
+      const res = await fetch(`http://localhost:5000/api/ruang_video/${editingVideo.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(values),
+      });
 
       const result = await res.json();
 
       if (res.ok) {
-        const updatedList = videoList.map((vid) =>
-          vid.id === editingVideo.id ? { ...vid, ...values } : vid
-        );
+        const updatedList = videoList.map((vid) => (vid.id === editingVideo.id ? { ...vid, ...values } : vid));
         setVideoList(updatedList);
 
         notification.success({
@@ -52,7 +46,6 @@ const DokumentasiVideo = () => {
           description: result.message,
         });
 
-        // Trigger update untuk RuangVideo
         window.dispatchEvent(new Event("video-updated"));
       } else {
         notification.error({
@@ -61,13 +54,11 @@ const DokumentasiVideo = () => {
         });
       }
     } else {
-      await postKaryaVideo(
-        values.judul,
-        values.link_youtube,
-        values.link_thumbnail,
-        values.deskripsi || "",
-        values.dibuat_oleh
-      );
+      const newVideo = await postKaryaVideo(values.judul, values.link_youtube, values.link_thumbnail, values.deskripsi || "", values.dibuat_oleh);
+
+      if (newVideo) {
+        setVideoList([...videoList, newVideo]);
+      }
     }
 
     setShowForm(false);
@@ -114,7 +105,13 @@ const DokumentasiVideo = () => {
   };
 
   const handleEdit = (video) => {
-    form.setFieldsValue(video);
+    form.setFieldsValue({
+      judul: video.title,
+      deskripsi: video.description,
+      link_youtube: video.youtubeLink,
+      link_thumbnail: video.thumbnail,
+      dibuat_oleh: video.dibuat_oleh,
+    });
     setEditingVideo(video);
     setShowForm(true);
   };
@@ -122,7 +119,7 @@ const DokumentasiVideo = () => {
   return (
     <div className="max-w-4xl mx-auto p-4">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Dokumentasi Video</h1>
+        <h1 className="text-2xl font-bold">Video Saya</h1>
         <Button
           type="primary"
           icon={<PlusOutlined />}
@@ -138,9 +135,7 @@ const DokumentasiVideo = () => {
 
       {videoList.length === 0 ? (
         <Card className="py-12 text-center">
-          <p className="text-gray-500 mb-4">
-            Anda belum memiliki video dokumentasi
-          </p>
+          <p className="text-gray-500 mb-4">Anda belum memiliki video dokumentasi</p>
         </Card>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -148,33 +143,31 @@ const DokumentasiVideo = () => {
             <Card
               key={video.id}
               cover={
-                <a
-                  href={video.link_youtube}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <img
-                    src={video.link_thumbnail}
-                    alt={video.judul}
-                    className="h-48 w-full object-cover"
-                  />
+                <a href={video.youtubeLink} target="_blank" rel="noopener noreferrer">
+                  <img src={video.thumbnail} alt={video.title} className="h-48 w-full object-cover" />
                 </a>
               }
               className="shadow-md"
               actions={[
-                <Edit3
-                  className="w-5 h-5 text-blue-600 hover:text-blue-800 mx-auto"
-                  onClick={() => handleEdit(video)}
-                />,
+                <Edit3 className="w-5 h-5 text-blue-600 hover:text-blue-800 mx-auto" onClick={() => handleEdit(video)} />,
                 <Trash2
                   className="w-5 h-5 text-red-600 hover:text-red-800 mx-auto"
-                  onClick={() => handleDelete(video.id)}
+                  onClick={() => {
+                    Modal.confirm({
+                      title: "Apakah Anda yakin ingin menghapus?",
+                      content: "Tindakan ini tidak dapat dibatalkan.",
+                      okText: "Ya",
+                      cancelText: "Tidak",
+                      okType: "danger",
+                      onOk: () => handleDelete(video.id),
+                    });
+                  }}
                 />,
               ]}
             >
-              <h3 className="font-bold">{video.judul}</h3>
+              <h3 className="font-bold">{video.title}</h3>
               <p className="text-sm text-gray-600">Oleh: {video.dibuat_oleh}</p>
-              <p className="text-sm text-gray-500">{video.deskripsi}</p>
+              <p className="text-sm text-gray-500">{video.description}</p>
             </Card>
           ))}
         </div>
@@ -188,42 +181,24 @@ const DokumentasiVideo = () => {
           form.resetFields();
         }}
         onOk={() => form.submit()}
-        title={
-          editingVideo ? "Edit Video Dokumentasi" : "Tambah Video Dokumentasi"
-        }
+        title={editingVideo ? "Edit Video Dokumentasi" : "Tambah Video Dokumentasi"}
         okText="Simpan Video"
         getContainer={false}
       >
         <Form form={form} layout="vertical" onFinish={handleFinish}>
-          <Form.Item
-            name="judul"
-            label="Judul Video"
-            rules={[{ required: true }]}
-          >
+          <Form.Item name="judul" label="Judul Video" rules={[{ required: true }]}>
             <Input placeholder="Masukkan judul video" />
           </Form.Item>
 
-          <Form.Item
-            name="dibuat_oleh"
-            label="Dibuat Oleh"
-            rules={[{ required: true }]}
-          >
+          <Form.Item name="dibuat_oleh" label="Dibuat Oleh" rules={[{ required: true }]}>
             <Input placeholder="Nama pembuat" />
           </Form.Item>
 
-          <Form.Item
-            name="link_youtube"
-            label="Link YouTube"
-            rules={[{ required: true }]}
-          >
+          <Form.Item name="link_youtube" label="Link YouTube" rules={[{ required: true }]}>
             <Input placeholder="https://www.youtube.com/watch?v=..." />
           </Form.Item>
 
-          <Form.Item
-            name="link_thumbnail"
-            label="Link Thumbnail"
-            rules={[{ required: true }]}
-          >
+          <Form.Item name="link_thumbnail" label="Link Thumbnail" rules={[{ required: true }]}>
             <Input placeholder="https://img.youtube.com/vi/xxx/0.jpg" />
           </Form.Item>
 

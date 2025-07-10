@@ -1,20 +1,21 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { getKaryaList, likeKarya, unlikeKarya } from "../util/api";
+import { getKaryaTerbaru, likeKarya, unlikeKarya } from "../util/api";
 
 const ArtCard = () => {
   const [artworks, setArtworks] = useState([]);
-  const [likedItems, setLikedItems] = useState([]);
+  const [likedKarya, setLikedKarya] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const data = await getKaryaList();
+        const data = await getKaryaTerbaru();
+
         setArtworks(data);
-        const storedLikes = JSON.parse(localStorage.getItem("likedItems")) || [];
-        setLikedItems(storedLikes);
+        const storedlike_count = JSON.parse(localStorage.getItem("likedKarya")) || [];
+        setLikedKarya(storedlike_count);
       } catch (err) {
         console.error("Gagal memuat karya dari server:", err);
       }
@@ -24,7 +25,7 @@ const ArtCard = () => {
   }, []);
 
   const handleLikeToggle = async (id) => {
-    const isLiked = likedItems.includes(id);
+    const isLiked = likedKarya.includes(id);
 
     try {
       const newLikeCount = isLiked ? await unlikeKarya(id) : await likeKarya(id);
@@ -33,16 +34,16 @@ const ArtCard = () => {
 
       setArtworks(updatedArtworks);
 
-      const updatedLikes = isLiked ? likedItems.filter((item) => item !== id) : [...likedItems, id];
+      const updatedlike_count = isLiked ? likedKarya.filter((item) => item !== id) : [...likedKarya, id];
 
-      setLikedItems(updatedLikes);
-      localStorage.setItem("likedItems", JSON.stringify(updatedLikes));
+      setLikedKarya(updatedlike_count);
+      localStorage.setItem("likedKarya", JSON.stringify(updatedlike_count));
     } catch (err) {
       console.error("Gagal toggle like:", err);
     }
   };
 
-  const limitedArtworks = artworks.slice(0, 6);
+  //const limitedArtworks = artworks.slice(0, 6);
 
   return (
     <section className="py-1 px-6">
@@ -65,10 +66,14 @@ const ArtCard = () => {
 
       <div className="overflow-x-auto scrollbar-hide px-1">
         <div className="flex space-x-6 pb-4">
-          {limitedArtworks.map((art) => {
-            const isLiked = likedItems.includes(art.id);
+          {artworks.map((art) => {
+            const isLiked = likedKarya.includes(art.id);
             return (
-              <div key={art.id} className="relative group min-w-[260px] overflow-hidden rounded-3xl bg-white/10 backdrop-blur-lg border border-white/30 shadow-xl hover:scale-105 transform transition-all duration-300 flex-shrink-0">
+              <div
+                key={art.id}
+                onClick={() => navigate(`/ruang-karya/${art.id}`)}
+                className="cursor-pointer relative group min-w-[260px] overflow-hidden rounded-3xl bg-white/10 backdrop-blur-lg border border-white/30 shadow-xl hover:scale-105 transform transition-all duration-300 flex-shrink-0"
+              >
                 <img src={`http://127.0.0.1:5000/${art.link_foto}`} alt={art.judul_karya} className="w-full h-64 object-cover group-hover:brightness-75 transition" />
                 <div className="absolute inset-0 flex flex-col justify-end p-4 opacity-0 group-hover:opacity-100 transition duration-300 bg-gradient-to-t from-black/70 via-black/20 to-transparent">
                   <h3 className="text-white text-lg font-semibold">{art.judul_karya}</h3>

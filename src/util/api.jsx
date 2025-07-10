@@ -80,3 +80,26 @@ export const unlikeKarya = async (id) => {
   const data = await res.json();
   return data.like_count;
 };
+
+// Ambil data user berdasarkan username
+export const getUserByUsername = async (username) => {
+  const res = await fetch(`${BASE_URL}/api/users/username/${username}`);
+  if (!res.ok) {
+    throw new Error("User tidak ditemukan");
+  }
+  return res.json();
+};
+
+// Ambil karya dan video dari user ID
+export const getUserDetailById = async (userId) => {
+  const res = await fetch(`${BASE_URL}/api/users/${userId}/detail`);
+  if (!res.ok) {
+    throw new Error("Gagal ambil detail user");
+  }
+  return res.json();
+};
+
+export const getKaryaTerbaru = async () => {
+  const res = await axios.get("http://127.0.0.1:5000/api/karya_seni/beranda");
+  return res.data;
+};

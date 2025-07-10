@@ -28,11 +28,11 @@ const DetailKarya = () => {
     const isLiked = likedList.includes(parseInt(id));
 
     if (isLiked) {
-      updated[karyaIndex].likes = Math.max((updated[karyaIndex].likes || 1) - 1, 0);
+      updated[karyaIndex].like_count = Math.max((updated[karyaIndex].like_count || 1) - 1, 0);
       const filteredLiked = likedList.filter((item) => item !== parseInt(id));
       localStorage.setItem("likedKarya", JSON.stringify(filteredLiked));
     } else {
-      updated[karyaIndex].likes = (updated[karyaIndex].likes || 0) + 1;
+      updated[karyaIndex].like_count = (updated[karyaIndex].like_count || 0) + 1;
       likedList.push(parseInt(id));
       localStorage.setItem("likedKarya", JSON.stringify(likedList));
     }
@@ -74,7 +74,7 @@ const DetailKarya = () => {
           </div>
 
           <div onClick={handleLike} className="flex items-center gap-2 text-gray-700 mb-6 cursor-pointer w-fit hover:scale-105 transition">
-            <span>{karya.likes || 0}</span>
+            <span>{karya.like_count || 0}</span>
             <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 transition" viewBox="0 0 24 24" style={{ fill: liked ? "#ef4444" : "#9ca3af" }}>
               <path
                 d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 

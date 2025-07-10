@@ -27,7 +27,7 @@ const RuangKarya = () => {
         description: karya.deskripsi,
         photo: `http://127.0.0.1:5000/${karya.link_foto}`,
         artist: karya.artist || "Anonim",
-        likes: karya.like_count || 0,
+        like_count: karya.like_count || 0,
       }));
       setArtworks(formatted);
       localStorage.setItem("daftarKarya", JSON.stringify(formatted));
@@ -78,16 +78,18 @@ const RuangKarya = () => {
             filtered.map((art) => {
               const isLiked = liked.includes(art.id);
               return (
-                <div key={art.id} className="border rounded shadow overflow-hidden bg-white">
+                <div key={art.id} className="border rounded-xl shadow-sm hover:shadow-xl overflow-hidden bg-white transition">
                   <Link to={`/ruang-karya/${art.id}`}>
-                    <img src={art.photo} alt={art.title} className="rounded-xl object-cover w-full h-48 transition-transform duration-300 hover:scale-105" />
+                    <div className="w-full h-60 overflow-hidden bg-white flex items-center justify-center">
+                      <img src={art.photo} alt={art.title} className="w-full h-full object-cover transition-transform duration-300 hover:scale-105" />
+                    </div>
                   </Link>
                   <div className="p-4">
                     <Link to={`/ruang-karya/${art.id}`}>
                       <h3 className="text-lg font-semibold hover:underline">{art.title}</h3>
                     </Link>
                     <p className="text-sm text-gray-600">Oleh: {art.artist}</p>
-                    <p className="text-sm text-gray-500">{art.description}</p>
+                    <p className="text-sm text-gray-500 line-clamp-3">{art.description}</p>
 
                     <div onClick={() => handleLike(art.id)} className="mt-2 flex items-center gap-1 cursor-pointer select-none w-fit hover:scale-105 transition">
                       <span>{art.like_count || 0}</span>

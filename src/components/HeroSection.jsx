@@ -25,7 +25,20 @@ const HeroSection = () => {
       <motion.div className="relative z-20" initial={{ opacity: 0, y: -30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
         <h1 className="text-4xl md:text-5xl font-extrabold mb-4">Galeri Karya Seni Digital</h1>
         <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto text-white/90">Temukan dan bagikan karya seni terbaik dari seniman berbakat di seluruh Indonesia. Jadilah bagian dari pergerakan seni masa kini.</p>
-        <motion.button onClick={() => navigate("/profile")} className="bg-white text-blue-700 font-semibold px-6 py-3 rounded-full shadow-lg hover:bg-gray-100 transition transform hover:scale-105" whileHover={{ scale: 1.08 }}>
+        <motion.button
+          onClick={() => {
+            const token = localStorage.getItem("token");
+            if (token) {
+              // User sudah login
+              navigate("/profile");
+            } else {
+              // Belum login, arahkan ke login
+              navigate("/login");
+            }
+          }}
+          className="bg-white text-blue-700 font-semibold px-6 py-3 rounded-full shadow-lg hover:bg-gray-100 transition transform hover:scale-105"
+          whileHover={{ scale: 1.08 }}
+        >
           🎨 Bagikan Karya Anda
         </motion.button>
       </motion.div>

@@ -19,15 +19,14 @@ const ProfilePage = () => {
     const fetchUserProfile = async () => {
       try {
         const token = localStorage.getItem("token");
-        const username = JSON.parse(localStorage.getItem("currentUser"))?.username;
-        if (!username) return;
+        if (!token) return;
 
-        const res = await axios.get(`http://127.0.0.1:5000/api/users/username/${username}`, {
+        const res = await axios.get("http://127.0.0.1:5000/api/users/me", {
           headers: { Authorization: `Bearer ${token}` },
         });
 
         const user = res.data;
-        console.log("📦 Data user dari backend:", res.data);
+        console.log("📦 Data user dari /me:", user);
 
         setUserData({
           name: user.nama_lengkap,

@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Avatar } from "antd";
 import { UserOutlined } from "@ant-design/icons";
 import { useEffect, useState } from "react";
@@ -6,25 +6,10 @@ import axios from "axios";
 
 const Navbar = () => {
   const [currentUser, setCurrentUser] = useState(null);
-  const location = useLocation(); // 🔍 Mendapatkan path saat ini
+  const location = useLocation();
+  const navigate = useNavigate();
 
-  // useEffect(() => {
-  //   const updateUser = () => {
-  //     const user = JSON.parse(localStorage.getItem("currentUser"));
-  //     setCurrentUser(user);
-  //   };
-
-  //   updateUser(); // initial load
-
-  //   window.addEventListener("storage", updateUser);
-  //   document.addEventListener("visibilitychange", updateUser);
-
-  //   return () => {
-  //     window.removeEventListener("storage", updateUser);
-  //     document.removeEventListener("visibilitychange", updateUser);
-  //   };
-  // }, []);
-
+  // Ambil data user dari /me jika ada token
   useEffect(() => {
     const fetchCurrentUser = async () => {
       const token = localStorage.getItem("token");
@@ -32,12 +17,8 @@ const Navbar = () => {
 
       try {
         const res = await axios.get("http://127.0.0.1:5000/api/users/me", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         });
-
-        console.log("👤 Data user dari /me:", res.data);
         setCurrentUser({
           name: res.data.nama_lengkap,
           avatar: res.data.foto_profil,
@@ -45,19 +26,27 @@ const Navbar = () => {
         });
       } catch (err) {
         console.error("Gagal ambil data user navbar:", err);
+        setCurrentUser(null);
       }
     };
 
     fetchCurrentUser();
+
+    // Event listener untuk auto update setelah login
+    window.addEventListener("user-logged-in", fetchCurrentUser);
+    return () => window.removeEventListener("user-logged-in", fetchCurrentUser);
   }, []);
 
-  // Fungsi untuk menentukan apakah link sedang aktif
   const isActive = (path) => location.pathname === path;
+
+  const goToProfile = () => {
+    navigate("/profile");
+  };
 
   return (
     <header className="flex justify-between items-center p-4 bg-white shadow-md sticky top-0 z-50">
       <Link to="/" className="text-2xl font-bold text-blue-600">
-        ArtGallery
+        ArtSpace
       </Link>
 
       <nav className="hidden md:flex gap-6">
@@ -73,17 +62,15 @@ const Navbar = () => {
         <Link to="/seniman" className={isActive("/seniman") ? "text-blue-600 font-semibold" : "hover:text-blue-600"}>
           Seniman
         </Link>
-        <Link to="/profile" className={isActive("/profile") ? "text-blue-600 font-semibold" : "hover:text-blue-600"}>
-          Profil
-        </Link>
+        {/* Tombol "Profil" dihapus */}
       </nav>
 
       <div className="flex items-center gap-3">
         {currentUser ? (
-          <div className="flex items-center gap-2">
+          <button onClick={goToProfile} className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition">
             <Avatar src={currentUser.avatar || null} icon={<UserOutlined />} size="small" />
             <span className="text-gray-700 font-medium">{currentUser.name?.split(" ")[0]}</span>
-          </div>
+          </button>
         ) : (
           <>
             <Link to="/login" className="px-4 py-1 text-sm rounded hover:text-blue-600">

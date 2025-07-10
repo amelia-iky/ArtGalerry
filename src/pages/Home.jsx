@@ -17,7 +17,7 @@ const sampleSlides = [
   },
   {
     src: "https://nusaweek.com/wp-content/uploads/2023/10/Patung-patung.jpg",
-    title: "Ekspresi Warna",
+    title: "Ekspresi",
   },
 ];
 
@@ -26,7 +26,7 @@ const Home = () => {
     dots: true,
     infinite: true,
     autoplay: true,
-    autoplaySpeed: 4000,
+    autoplaySpeed: 1000,
     speed: 1000,
     slidesToShow: 1,
     slidesToScroll: 1,
@@ -40,10 +40,10 @@ const Home = () => {
       <section className="py-16">
         <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6 px-4">
           {[
-            { count: "5.2K", label: "Digital Artworks" },
-            { count: "2.1K", label: "Active Artists" },
-            { count: "50K", label: "Art Collectors" },
-            { count: "180", label: "Countries" },
+            { count: "1.1K", label: "Karya Terposting" },
+            { count: "500", label: "Seniman" },
+            { count: "200", label: "Video Terposting" },
+            { count: "34", label: "Wilayah" },
           ].map((item, idx) => (
             <motion.div
               key={idx}
@@ -119,8 +119,8 @@ const Home = () => {
         <div className="max-w-6xl mx-auto grid gap-10 md:grid-cols-3 px-4">
           {[
             {
-              name: "Laras, Seniman Digital",
-              feedback: "ArtGallery memberi saya panggung untuk memamerkan karya seni saya ke khalayak yang lebih luas.",
+              name: "dina, Seniman Digital",
+              feedback: "ArtSpace memberi saya panggung untuk memamerkan karya seni saya ke khalayak yang lebih luas.",
               avatar: "https://i.pravatar.cc/100?img=47",
             },
             {

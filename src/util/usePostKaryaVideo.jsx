@@ -9,13 +9,7 @@ export const usePostKaryaVideo = () => {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
 
-  const postKaryaVideo = async (
-    judul,
-    link_youtube,
-    link_thumbnail,
-    deskripsi,
-    dibuat_oleh
-  ) => {
+  const postKaryaVideo = async (judul, link_youtube, link_thumbnail, deskripsi, dibuat_oleh) => {
     setLoading(true);
     try {
       const payload = {
@@ -46,6 +40,16 @@ export const usePostKaryaVideo = () => {
           timer: 2000,
           showConfirmButton: false,
         });
+
+        // Kembalikan data video baru agar bisa langsung ditambahkan ke UI
+        return {
+          id: result.id, // Pastikan backend mengirim `id`
+          title: judul,
+          youtubeLink: link_youtube,
+          thumbnail: link_thumbnail,
+          description: deskripsi,
+          dibuat_oleh,
+        };
       } else {
         Swal.fire({
           icon: "error",
@@ -67,21 +71,21 @@ export const usePostKaryaVideo = () => {
     } finally {
       setLoading(false);
     }
+
+    // Kembalikan null jika gagal
+    return null;
   };
 
   const editKaryaVideo = async (id, values) => {
     try {
-      const response = await fetch(
-        `http://127.0.0.1:5000/api/ruang_video/${id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(values),
-        }
-      );
+      const response = await fetch(`http://127.0.0.1:5000/api/ruang_video/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(values),
+      });
       return await response.json();
     } catch (error) {
       console.error("Gagal edit video:", error);
@@ -91,15 +95,12 @@ export const usePostKaryaVideo = () => {
 
   const deleteKaryaVideo = async (id) => {
     try {
-      const response = await fetch(
-        `http://127.0.0.1:5000/api/ruang_video/${id}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await fetch(`http://127.0.0.1:5000/api/ruang_video/${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       return await response.json();
     } catch (error) {
       console.error("Gagal hapus video:", error);
