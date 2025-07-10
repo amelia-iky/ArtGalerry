@@ -52,8 +52,8 @@ const ProfilePage = () => {
     if (file) {
       const reader = new FileReader();
       reader.onload = () => {
-        setAvatarUrl(reader.result); // untuk preview
-        setSelectedAvatarFile(file); // untuk upload
+        setAvatarUrl(reader.result);
+        setSelectedAvatarFile(file);
       };
       reader.readAsDataURL(file);
       message.success(`${file.name} berhasil diunggah`);
@@ -73,17 +73,14 @@ const ProfilePage = () => {
 
       const token = localStorage.getItem("token");
 
-      // Kirim update ke backend
       await axios.put(`http://127.0.0.1:5000/api/users/${userId}`, formData, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
       notification.success({ message: "Profil berhasil diperbarui" });
 
-      // ✅ Reset file upload
       setSelectedAvatarFile(null);
 
-      // ✅ Ambil ulang data user yang terbaru dari backend
       const res = await axios.get(`http://127.0.0.1:5000/api/users/username/${values.username}`, {
         headers: { Authorization: `Bearer ${token}` },
       });

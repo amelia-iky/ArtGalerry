@@ -1,5 +1,3 @@
-// RuangVideo.jsx
-
 import { useEffect, useState } from "react";
 import { Input } from "antd";
 import { motion } from "framer-motion";

@@ -2,8 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Form, Input, Button, Card, message } from "antd";
 import { MailOutlined, LockOutlined, UserOutlined } from "@ant-design/icons";
-import { registerUser } from "../util/api"; // pastikan file ini ada
-
+import { registerUser } from "../util/api";
 const RegisterPage = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -20,7 +19,6 @@ const RegisterPage = () => {
 
       const res = await registerUser(payload);
 
-      // ✅ Gunakan res.status === 201 (bukan success atau string)
       if (res?.status === 201) {
         message.success("Registrasi berhasil! Silakan login.");
         navigate("/login");

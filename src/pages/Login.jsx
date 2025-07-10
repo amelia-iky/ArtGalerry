@@ -17,7 +17,6 @@ const LoginPage = () => {
         localStorage.setItem("token", res.token);
         localStorage.setItem("currentUser", JSON.stringify(res.user));
 
-        // 🔔 Trigger event biar Navbar langsung update
         window.dispatchEvent(new Event("user-logged-in"));
 
         message.success("Login berhasil!");

@@ -73,7 +73,7 @@ const SenimanPage = () => {
                 type="primary"
                 className="mt-4 bg-purple-600 hover:bg-purple-700 w-full rounded-full font-medium"
                 onClick={(e) => {
-                  e.stopPropagation(); // penting: cegah bubbling
+                  e.stopPropagation();
                   navigate(`/seniman/${user.username}`);
                 }}
               >

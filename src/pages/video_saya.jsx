@@ -88,7 +88,6 @@ const DokumentasiVideo = () => {
           description: result.message,
         });
 
-        // Trigger update untuk RuangVideo
         window.dispatchEvent(new Event("video-updated"));
       } else {
         notification.error({

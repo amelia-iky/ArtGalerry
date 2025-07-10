@@ -1,9 +1,7 @@
 import { useState, useEffect } from "react";
 import { Edit3, Trash2 } from "lucide-react";
-import { message, notification } from "antd";
-import { tambahKarya, getKaryaList } from "../util/api"; // Pastikan ada
-import Swal from "sweetalert2";
-// getKaryaList = GET ke /api/karya_seni
+import { message, notification, Modal } from "antd";
+import { tambahKarya, getKaryaList } from "../util/api";
 
 const HalamanKarya = () => {
   const [artworks, setArtworks] = useState([]);
@@ -23,7 +21,7 @@ const HalamanKarya = () => {
 
   const fetchKaryaDariBackend = async () => {
     try {
-      const data = await getKaryaList(); // Panggil API backend
+      const data = await getKaryaList();
       const karyaUserSendiri = data.filter((karya) => karya.user_id === currentUser?.id);
       console.log("DATA:", karyaUserSendiri);
       setArtworks(karyaUserSendiri);
@@ -61,32 +59,28 @@ const HalamanKarya = () => {
     setShowModal(true);
   };
 
-  const handleDelete = async (id) => {
-    const confirm = await Swal.fire({
+  const handleDelete = (id) => {
+    Modal.confirm({
       title: "Hapus Karya?",
-      text: "Karya ini akan dihapus permanen.",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#d33",
-      cancelButtonColor: "#3085d6",
-      confirmButtonText: "Ya, hapus!",
-      cancelButtonText: "Batal",
+      content: "Karya ini akan dihapus permanen. Anda yakin?",
+      okText: "Ya, hapus",
+      cancelText: "Batal",
+      okType: "danger",
+      onOk: async () => {
+        try {
+          await fetch(`http://127.0.0.1:5000/api/karya_seni/${id}`, {
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          notification.success({ message: "Karya berhasil dihapus" });
+          fetchKaryaDariBackend();
+        } catch (err) {
+          message.error("Gagal menghapus karya.");
+        }
+      },
     });
-
-    if (confirm.isConfirmed) {
-      try {
-        await fetch(`http://127.0.0.1:5000/api/karya_seni/${id}`, {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        notification.success({ message: "Karya berhasil dihapus" });
-        fetchKaryaDariBackend(); // Refresh data
-      } catch (err) {
-        message.error("Gagal menghapus karya.");
-      }
-    }
   };
 
   const handleSubmit = async (e) => {
@@ -101,7 +95,7 @@ const HalamanKarya = () => {
     formData.append("deskripsi", deskripsi);
     formData.append("link_whatsapp", `https://wa.me/${currentUser?.username}`);
     if (imageFile) {
-      formData.append("link_foto", imageFile); // hanya kirim kalau user upload ulang
+      formData.append("link_foto", imageFile);
     }
 
     try {
@@ -119,7 +113,7 @@ const HalamanKarya = () => {
         notification.success({ message: "Karya berhasil ditambahkan" });
       }
 
-      fetchKaryaDariBackend(); // Refresh data
+      fetchKaryaDariBackend();
       setShowModal(false);
       resetForm();
     } catch (err) {

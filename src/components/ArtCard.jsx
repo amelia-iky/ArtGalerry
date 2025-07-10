@@ -43,8 +43,6 @@ const ArtCard = () => {
     }
   };
 
-  //const limitedArtworks = artworks.slice(0, 6);
-
   return (
     <section className="py-1 px-6">
       <div className="flex justify-between items-center mb-6 max-w-6xl mx-auto px-4">

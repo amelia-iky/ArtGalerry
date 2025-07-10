@@ -9,7 +9,6 @@ const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Ambil data user dari /me jika ada token
   useEffect(() => {
     const fetchCurrentUser = async () => {
       const token = localStorage.getItem("token");
@@ -32,7 +31,6 @@ const Navbar = () => {
 
     fetchCurrentUser();
 
-    // Event listener untuk auto update setelah login
     window.addEventListener("user-logged-in", fetchCurrentUser);
     return () => window.removeEventListener("user-logged-in", fetchCurrentUser);
   }, []);
