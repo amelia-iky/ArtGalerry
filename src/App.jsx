@@ -14,6 +14,7 @@ import SenimanPage from "./pages/seniman";
 import DetailSeniman from "./components/ProfilSeniman";
 import RuangVideo from "./pages/ruang_video";
 import "antd/dist/reset.css"; // ini juga penting, bisa ditaruh di sini
+// import VideoDetail from "./pages/VideoDetailTemp";
 
 function App() {
   return (
@@ -30,6 +31,7 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/ruang-video" element={<RuangVideo />} />
+        {/* <Route path="/video/:userId/:videoId" element={<VideoDetail />} /> */}
 
         {/* ✅ Halaman profile sekarang terlindungi */}
         <Route

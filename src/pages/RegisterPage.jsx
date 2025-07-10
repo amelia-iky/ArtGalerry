@@ -19,18 +19,19 @@ const RegisterPage = () => {
       };
 
       const res = await registerUser(payload);
-      console.log(res);
 
-      if (res.success || res.status === 201 || res.status === "Regristasi berhasil") {
-        message.success("Berhasil mendaftar!");
+      // ✅ Gunakan res.status === 201 (bukan success atau string)
+      if (res?.status === 201) {
+        message.success("Registrasi berhasil! Silakan login.");
         navigate("/login");
       } else {
-        message.error(res.message || "Gagal mendaftar.");
+        const msg = res.data?.message || "Registrasi gagal.";
+        message.error("❌ " + msg);
       }
     } catch (err) {
-      console.error("Register Error:", err.response || err.message);
-      const msg = err.response?.data?.message || err.response?.data?.error || "Terjadi kesalahan saat mendaftar.";
-      message.error(msg);
+      console.error("Register Error:", err);
+      const msg = err.response?.data?.message || "Terjadi kesalahan saat mendaftar.";
+      message.error("❌ " + msg);
     } finally {
       setLoading(false);
     }

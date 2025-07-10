@@ -2,7 +2,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Card, Avatar } from "antd";
 import { UserOutlined } from "@ant-design/icons";
-
+import { getUserByUsername, getUserDetailById } from "../util/api";
 const DetailSeniman = () => {
   const { username } = useParams();
   const navigate = useNavigate();
@@ -11,44 +11,55 @@ const DetailSeniman = () => {
   const [video, setVideo] = useState([]);
 
   useEffect(() => {
-    const users = JSON.parse(localStorage.getItem("users")) || [];
-    const user = users.find((u) => u.username === username);
+    const fetchData = async () => {
+      try {
+        const user = await getUserByUsername(username);
+        setSeniman(user);
 
-    if (!user) {
-      navigate("/seniman");
-      return;
-    }
+        const detail = await getUserDetailById(user.id);
 
-    setSeniman(user);
+        const karyaData = (detail.karya_seni || []).map((k) => ({
+          id: k.id,
+          title: k.judul_karya,
+          description: k.deskripsi,
+          photo: `http://127.0.0.1:5000/${k.link_foto}`,
+        }));
 
-    const allKarya = JSON.parse(localStorage.getItem("daftarKarya")) || [];
-    const allVideo = JSON.parse(localStorage.getItem("videoList")) || [];
+        const videoData = (detail.ruang_video || []).map((v) => ({
+          id: v.id,
+          title: v.judul,
+          description: v.deskripsi,
+          youtubeLink: v.link_youtube,
+          thumbnail: v.link_thumbnail?.startsWith("http") ? v.link_thumbnail : `http://127.0.0.1:5000/${v.link_thumbnail}`,
+        }));
 
-    // Hanya tampilkan karya dan video yang dimiliki user (berdasarkan username)
-    // const karyaUser = allKarya.filter((k) => k.owner === user.username);
-    // const videoUser = allVideo.filter((v) => v.owner === user.username);
-    // console.log(allVideo);
+        console.log("📺 Data video:", videoData);
 
-    setKarya(allKarya);
-    setVideo(allVideo);
+        setKarya(karyaData);
+        setVideo(videoData);
+      } catch (error) {
+        console.error("Error loading profile:", error);
+        navigate("/seniman");
+      }
+    };
+
+    fetchData();
   }, [username, navigate]);
 
-  if (!seniman) return null;
+  if (!seniman) return <p className="text-center text-gray-500">Memuat profil...</p>;
 
   return (
     <div className="max-w-5xl mx-auto p-6">
       <Card className="mb-6 shadow p-6">
         <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
-          {/* Avatar di kiri tengah */}
           <div className="flex-shrink-0 flex justify-center items-center">
-            <Avatar size={100} src={seniman.avatar || null} icon={<UserOutlined />} className="bg-blue-500 text-white text-3xl">
-              {!seniman.avatar && seniman.name?.charAt(0)}
+            <Avatar size={100} src={seniman.foto_profil || null} icon={<UserOutlined />} className="bg-blue-500 text-white text-3xl">
+              {!seniman.foto_profil && seniman.nama_lengkap?.charAt(0)}
             </Avatar>
           </div>
 
-          {/* Informasi Seniman */}
           <div className="text-center md:text-left">
-            <h2 className="text-2xl font-bold text-gray-800">{seniman.name}</h2>
+            <h2 className="text-2xl font-bold text-gray-800">{seniman.nama_lengkap}</h2>
             <p className="text-blue-600 text-sm">@{seniman.username}</p>
             <p className="text-gray-600 mt-2 whitespace-pre-wrap max-w-xl">{seniman.bio || "Belum ada bio."}</p>
           </div>
@@ -56,7 +67,7 @@ const DetailSeniman = () => {
       </Card>
 
       <h3 className="text-xl font-semibold mb-3 text-gray-800">🎨 Karya</h3>
-      {karya.length >= 0 ? (
+      {karya.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
           {karya.map((k) => (
             <Link to={`/ruang-karya/${k.id}`} state={{ from: `/seniman/${seniman.username}` }} key={k.id}>
@@ -68,7 +79,7 @@ const DetailSeniman = () => {
           ))}
         </div>
       ) : (
-        <p className="text-gray-500 mb-6"> ada karyaBelum.</p>
+        <p className="text-gray-500 mb-6">Belum ada karya yang diunggah.</p>
       )}
 
       <h3 className="text-xl font-semibold mb-3 text-gray-800">📹 Video</h3>
@@ -78,7 +89,7 @@ const DetailSeniman = () => {
             <Card key={v.id}>
               {v.thumbnail ? (
                 <a href={v.youtubeLink} target="_blank" rel="noopener noreferrer">
-                  <img src={v.thumbnail || "https://img.youtube.com/vi/default.jpg"} className="w-full h-48 object-cover" />
+                  <img src={v.thumbnail} className="w-full h-48 object-cover" alt={v.title} />
                 </a>
               ) : (
                 <p className="text-sm text-red-500">Video tidak tersedia</p>
