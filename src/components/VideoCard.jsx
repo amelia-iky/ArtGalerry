@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { getVideoTerbaru } from "../util/api"; // pastikan path-nya benar
 
 const VideoCard = () => {
   const [videos, setVideos] = useState([]);
@@ -8,8 +9,7 @@ const VideoCard = () => {
 
   const fetchVideos = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/ruang_video");
-      const data = await res.json();
+      const data = await getVideoTerbaru(); // pakai util API
       setVideos(data);
     } catch (err) {
       console.error("Gagal memuat video:", err);
@@ -24,8 +24,6 @@ const VideoCard = () => {
 
     return () => window.removeEventListener("video-updated", handleUpdate);
   }, []);
-
-  const limitedVideos = videos.slice(0, 6);
 
   return (
     <div className="px-6 pb-28">
@@ -47,7 +45,7 @@ const VideoCard = () => {
       </div>
 
       <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 max-w-6xl mx-auto">
-        {limitedVideos.map((video) => (
+        {videos.map((video) => (
           <div key={video.id} className="relative group overflow-hidden rounded-2xl shadow-xl bg-white/80 backdrop-blur-md transition-transform hover:scale-[1.02]">
             <div className="relative">
               <a href={video.link_youtube} target="_blank" rel="noopener noreferrer">

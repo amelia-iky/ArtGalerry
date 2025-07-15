@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import Swal from "sweetalert2";
+import { notification } from "antd";
 
 export const usePostKaryaVideo = () => {
   const [data, setData] = useState(null);
@@ -33,17 +33,13 @@ export const usePostKaryaVideo = () => {
       setData(result);
 
       if (response.status === 201) {
-        Swal.fire({
-          icon: "success",
-          title: "Berhasil",
-          text: "Data berhasil disimpan!",
-          timer: 2000,
-          showConfirmButton: false,
+        notification.success({
+          message: "Berhasil",
+          description: "Video berhasil ditambahkan!",
         });
 
-        // Kembalikan data video baru agar bisa langsung ditambahkan ke UI
         return {
-          id: result.id, // Pastikan backend mengirim `id`
+          id: result.id,
           title: judul,
           youtubeLink: link_youtube,
           thumbnail: link_thumbnail,
@@ -51,28 +47,21 @@ export const usePostKaryaVideo = () => {
           dibuat_oleh,
         };
       } else {
-        Swal.fire({
-          icon: "error",
-          title: "Gagal",
-          text: result.message || "Terdapat kesalahan!",
-          timer: 2000,
-          showConfirmButton: false,
+        notification.error({
+          message: "Gagal",
+          description: result.message || "Terdapat kesalahan!",
         });
       }
     } catch (err) {
       setError(err);
-      Swal.fire({
-        icon: "error",
-        title: "Gagal",
-        text: "Terjadi kesalahan saat mengirim data!",
-        timer: 2000,
-        showConfirmButton: false,
+      notification.error({
+        message: "Gagal",
+        description: "Terjadi kesalahan saat mengirim data!",
       });
     } finally {
       setLoading(false);
     }
 
-    // Kembalikan null jika gagal
     return null;
   };
 

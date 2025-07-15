@@ -58,6 +58,7 @@ const DokumentasiVideo = () => {
 
       if (newVideo) {
         setVideoList([...videoList, newVideo]);
+        window.dispatchEvent(new Event("video-updated"));
       }
     }
 
